@@ -5,3 +5,16 @@ textarea {
 p {
   margin-bottom: 0;
 }
+
+/* Single Email */
+.email {
+  margin-bottom: 10px;
+  border: 1px solid gray;
+  padding: 5px 15px;
+}
+.email div span {
+  opacity: 0.7;
+}
+.email p {
+  font-size: 1.2em;
+}

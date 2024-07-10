@@ -65,6 +65,9 @@ function email_response_alert(message) {
 function submit_email() {
   fetch("/emails", {
     method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
     body: JSON.stringify({
       recipients: document.querySelector("#compose-recipients").value,
       subject: document.querySelector("#compose-subject").value,
@@ -79,26 +82,35 @@ function submit_email() {
         email_response_alert(result.error);
       }
     });
-  load_mailbox("inbox");
+  load_mailbox("sent");
   return false;
 }
 
 // Fetch emails based on mailbox
 function fetch_emails(mailbox) {
-  if (document.querySelector(`#emails-${mailbox}`).children.length == 0) {
-    fetch(`/emails/${mailbox}`, {
-      method: "GET",
-    })
-      .then((response) => response.json())
-      .then((result) => {
-        result.forEach((email) => {
-          const element = document.createElement("div");
-          element.className = "email";
-          element.innerHTML = `<span>${email.sender}</span>: <p>${email.subject}</p> <span>${email.timestamp}</span>`;
-          document.querySelector(`#emails-${mailbox}`).appendChild(element);
-        });
+  fetch(`/emails/${mailbox}`, {
+    method: "GET",
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      console.log(result);
+      result.forEach((email) => {
+        const element = document.createElement("div");
+
+        if (email.read && mailbox === "inbox") {
+          element.classList.add("bg-secondary");
+        }
+        element.classList.add("email");
+        element.innerHTML = `
+          <p>${email.subject}</p>
+          <div class="d-flex justify-content-between">
+            <span>${email.sender}</span>
+            <span>${email.timestamp}</span>
+          </div>
+          `;
+        document.querySelector(`#emails-${mailbox}`).appendChild(element);
       });
-  }
+    });
 }
 
 function clear_page(mailbox) {
@@ -108,14 +120,17 @@ function clear_page(mailbox) {
 
   if (mailbox === "sent") {
     sent.className = "";
+    sent.innerHTML = "";
     inbox.className = "d-none";
     archive.className = "d-none";
   } else if (mailbox === "inbox") {
     inbox.className = "";
+    inbox.innerHTML = "";
     sent.className = "d-none";
     archive.className = "d-none";
   } else if (mailbox === "archive") {
     archive.className = "";
+    archive.innerHTML = "";
     inbox.className = "d-none";
     sent.className = "d-none";
   } else if (mailbox === "compose") {
