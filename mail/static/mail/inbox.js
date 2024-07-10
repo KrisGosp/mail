@@ -38,6 +38,11 @@ function load_mailbox(mailbox) {
   document.querySelector("#emails-view").innerHTML = `<h3>${
     mailbox.charAt(0).toUpperCase() + mailbox.slice(1)
   }</h3>`;
+
+  // Clear emails list
+  clear_page(mailbox);
+
+  fetch_emails(mailbox);
 }
 
 function email_response_alert(message) {
@@ -74,4 +79,46 @@ function submit_email() {
     });
   load_mailbox("inbox");
   return false;
+}
+
+// Fetch emails based on mailbox
+function fetch_emails(mailbox) {
+  if (document.querySelector(`#emails-${mailbox}`).children.length == 0) {
+    fetch(`/emails/${mailbox}`, {
+      method: "GET",
+    })
+      .then((response) => response.json())
+      .then((result) => {
+        result.forEach((email) => {
+          const element = document.createElement("div");
+          element.className = "email";
+          element.innerHTML = `<span>${email.sender}</span>: <p>${email.subject}</p> <span>${email.timestamp}</span>`;
+          document.querySelector(`#emails-${mailbox}`).appendChild(element);
+        });
+      });
+  }
+}
+
+function clear_page(mailbox) {
+  const inbox = document.querySelector("#emails-inbox");
+  const sent = document.querySelector("#emails-sent");
+  const archive = document.querySelector("#emails-archive");
+
+  if (mailbox === "sent") {
+    sent.className = "";
+    inbox.className = "d-none";
+    archive.className = "d-none";
+  } else if (mailbox === "inbox") {
+    inbox.className = "";
+    sent.className = "d-none";
+    archive.className = "d-none";
+  } else if (mailbox === "archive") {
+    archive.className = "";
+    inbox.className = "d-none";
+    sent.className = "d-none";
+  } else if (mailbox === "compose") {
+    inbox.className = "d-none";
+    sent.className = "d-none";
+    archive.className = "d-none";
+  }
 }
