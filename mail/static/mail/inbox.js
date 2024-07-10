@@ -27,6 +27,8 @@ function compose_email() {
   document.querySelector("#compose-recipients").value = "";
   document.querySelector("#compose-subject").value = "";
   document.querySelector("#compose-body").value = "";
+
+  clear_page("compose");
 }
 
 function load_mailbox(mailbox) {
