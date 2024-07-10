@@ -98,9 +98,10 @@ function fetch_emails(mailbox) {
         const element = document.createElement("div");
 
         if (email.read && mailbox === "inbox") {
-          element.classList.add("bg-secondary");
+          element.classList.add("email", "bg-secondary");
+        } else {
+          element.classList.add("email", "bg-white");
         }
-        element.classList.add("email");
         element.innerHTML = `
           <p>${email.subject}</p>
           <div class="d-flex justify-content-between">
@@ -108,7 +109,10 @@ function fetch_emails(mailbox) {
             <span>${email.timestamp}</span>
           </div>
           `;
-        document.querySelector(`#emails-${mailbox}`).appendChild(element);
+        element.addEventListener("click", function () {
+          single_email(email.id);
+        });
+        document.querySelector(`#emails-${mailbox}`).append(element);
       });
     });
 }
@@ -138,4 +142,33 @@ function clear_page(mailbox) {
     sent.className = "d-none";
     archive.className = "d-none";
   }
+}
+
+function single_email(email_id) {
+  fetch(`/emails/${email_id}`, {
+    method: "GET",
+  })
+    .then((response) => response.json())
+    .then((result) => {
+      console.log(result);
+      document.querySelector("#emails-inbox").className = "";
+      document.querySelector("#emails-inbox").innerHTML = `
+        <ul class="list-group">
+          <li class="list-group-item">Sender: ${result.sender}</li>
+          <li class="list-group-item">Recipients: ${result.recipients}</li>
+          <li class="list-group-item">Subject: ${result.subject}</li>
+          <li class="list-group-item">Body: ${result.body}</li>
+          <li class="list-group-item">Sent: ${result.timestamp}</li>
+        </ul>
+      `;
+
+      if (!result.read) {
+        fetch(`/emails/${email_id}`, {
+          method: "PUT",
+          body: JSON.stringify({
+            read: true,
+          }),
+        });
+      }
+    });
 }
