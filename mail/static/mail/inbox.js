@@ -93,7 +93,6 @@ function fetch_emails(mailbox) {
   })
     .then((response) => response.json())
     .then((result) => {
-      console.log(result);
       result.forEach((email) => {
         const element = document.createElement("div");
 
@@ -145,12 +144,12 @@ function clear_page(mailbox) {
 }
 
 function single_email(email_id) {
+  clear_page("inbox");
   fetch(`/emails/${email_id}`, {
     method: "GET",
   })
     .then((response) => response.json())
     .then((result) => {
-      console.log(result);
       document.querySelector("#emails-inbox").className = "";
       document.querySelector("#emails-inbox").innerHTML = `
         <ul class="list-group">
@@ -162,6 +161,45 @@ function single_email(email_id) {
         </ul>
       `;
 
+      if (document.querySelector("#emails-view").innerHTML != "<h3>Sent</h3>") {
+        // Add archive button
+        const btn_archive = document.createElement("button");
+        btn_archive.innerHTML = result.archived ? "Unarchive" : "Archive";
+        btn_archive.className = result.archived
+          ? "btn btn-outline-secondary"
+          : "btn btn-outline-primary";
+
+        btn_archive.addEventListener("click", function () {
+          fetch(`/emails/${email_id}`, {
+            method: "PUT",
+            body: JSON.stringify({
+              archived: !result.archived,
+            }),
+          }).then(() => load_mailbox("inbox"));
+        });
+        document.querySelector("#emails-inbox").append(btn_archive);
+
+        // Add reply button
+        const btn_reply = document.createElement("button");
+        btn_reply.innerHTML = "Reply";
+        btn_reply.className = "btn btn-outline-primary";
+        btn_reply.addEventListener("click", function () {
+          compose_email();
+
+          document.querySelector("#compose-recipients").value = result.sender;
+          let subject = result.subject;
+          if (subject.split(" ", 1)[0] != "Re:") {
+            subject = `Re: ${result.subject}`;
+          }
+
+          document.querySelector("#compose-subject").value = subject;
+          document.querySelector(
+            "#compose-body"
+          ).value = `On ${result.timestamp} ${result.sender} wrote:\n\n${result.body}`;
+        });
+
+        document.querySelector("#emails-inbox").append(btn_reply);
+      }
       if (!result.read) {
         fetch(`/emails/${email_id}`, {
           method: "PUT",
